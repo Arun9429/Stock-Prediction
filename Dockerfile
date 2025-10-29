@@ -1,62 +1,45 @@
-# Build stage
-FROM python:3.9-slim-bullseye as builder
+# Use Python 3.9 as the base image
+FROM python:3.9-slim-bullseye
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8 \
-    PYTHONPATH=/app
+# Prevent Python from writing pyc files
+ENV PYTHONDONTWRITEBYTECODE=1
+# Prevent Python from buffering stdout and stderr
+ENV PYTHONUNBUFFERED=1
+
+# Set the locale
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
 # Set working directory
 WORKDIR /app
 
-# Install build dependencies
+# Install system dependencies
 RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get update --fix-missing && \
-    apt-get install -y --no-install-recommends \
+    apt-get install -y \
         build-essential \
         curl \
+        software-properties-common \
         python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements file
 COPY requirements.txt .
 
-# Install dependencies
+# Upgrade pip and install dependencies
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir uvicorn
+    pip install --no-cache-dir -r requirements.txt
 
-# Final stage
-FROM python:3.9-slim-bullseye
+# Copy the application code
+COPY app/ app/
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8 \
-    PYTHONPATH=/app
-
-WORKDIR /app
-
-# Copy only the necessary files from builder
-COPY --from=builder /usr/local/lib/python3.9/site-packages/ /usr/local/lib/python3.9/site-packages/
-COPY --from=builder /usr/local/bin/uvicorn /usr/local/bin/
-
-# Copy application code
-COPY app/ app/
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
 
 # Expose port
 EXPOSE 8000
-
-# Create non-root user
-RUN useradd -m -u 1000 appuser && \
-    chown -R appuser:appuser /app
-
-# Switch to non-root user
-USER appuser
 
 # Command to run the application
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
