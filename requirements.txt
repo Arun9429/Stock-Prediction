@@ -8,7 +8,7 @@ python-jose
 passlib
 google-auth
 requests
-python-multipart
+python-dotenv
 yfinance
 tensorflow
 scikit-learn
