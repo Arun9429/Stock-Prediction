@@ -1,6 +1,7 @@
 # app/config.py
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
+from typing import Optional
 import os
 
 load_dotenv()
@@ -13,11 +14,11 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:3000"
     
     # Environment variables - no default sensitive values
-    MONGODB_URL: str | None = None
-    SECRET_KEY: str | None = None
-    GOOGLE_CLIENT_ID: str | None = None
-    GOOGLE_CLIENT_SECRET: str | None = None
-    GOOGLE_REDIRECT_URI: str | None = None
+    MONGODB_URL: Optional[str] = None
+    SECRET_KEY: Optional[str] = None
+    GOOGLE_CLIENT_ID: Optional[str] = None
+    GOOGLE_CLIENT_SECRET: Optional[str] = None
+    GOOGLE_REDIRECT_URI: Optional[str] = None
 
     class Config:
         env_file = ".env"
