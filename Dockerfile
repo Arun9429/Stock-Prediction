@@ -21,8 +21,9 @@ RUN apt-get clean && \
         python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements file
+# Copy requirements file and application code
 COPY requirements.txt .
+COPY app/ app/
 
 # Install dependencies
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
@@ -44,12 +45,7 @@ WORKDIR /app
 # Copy only the necessary files from builder
 COPY --from=builder /usr/local/lib/python3.9/site-packages/ /usr/local/lib/python3.9/site-packages/
 COPY --from=builder /usr/local/bin/uvicorn /usr/local/bin/
-
-# Copy application code
-COPY app/ app/
-
-# Expose port
-EXPOSE 8000
+COPY --from=builder /app/app/ /app/app/
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && \
@@ -58,5 +54,8 @@ RUN useradd -m -u 1000 appuser && \
 # Switch to non-root user
 USER appuser
 
+# Expose port
+EXPOSE 8000
+
 # Command to run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
